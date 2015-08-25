@@ -93,4 +93,5 @@ co.rc.tokenmanager {
 2. Execute commands in sbt console: `update, compile`
 3. To run tests execute in sbt console: `test`
 4. To generate code coverage report execute in sbt console: `coverage, test`
+
 ## Test code coverage - 100%
