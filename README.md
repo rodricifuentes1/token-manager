@@ -52,3 +52,17 @@ co.rc.tokenmanager {
     tokenNotBefore // OPTIONAL PARAMETER. DEFAULT -> None
   )
 ```
+### Validate a JWT token
+```scala
+
+  // Token to validate
+  val token: String = "eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA"
+  
+  // Default validation
+  val valid: Future[Boolean] = AsyncHmacGenerator.validateToken( token )
+  
+  // Custom validation
+  // Optional parameter validateExpirationTime is set to true by default
+  // Optional parameter validateNotBeforeDate is set to false by default
+  val valid2: Future[Boolean] = AsyncHmacGenerator.validateToken( token, validateExpirationTime = false, validateNotBeforeDate = true )
+```
