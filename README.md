@@ -54,6 +54,11 @@ co.rc.tokenmanager {
 ```
 ### Validate a JWT token
 ```scala
+  // Provide an implicit execution context
+  implicit val executionContext: ExecutionContext = Implicits.global
+  
+  // Provide an implicit configuration
+  implicit val config = ConfigFactory.load()
 
   // Token to validate
   val token: String = "eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA"
@@ -66,3 +71,26 @@ co.rc.tokenmanager {
   // Optional parameter validateNotBeforeDate is set to false by default
   val valid2: Future[Boolean] = AsyncHmacGenerator.validateToken( token, validateExpirationTime = false, validateNotBeforeDate = true )
 ```
+### Get token claims
+```scala
+  // Provide an implicit execution context
+  implicit val executionContext: ExecutionContext = Implicits.global
+  
+  // Provide an implicit configuration
+  implicit val config = ConfigFactory.load()
+  
+  // Token
+  val token: String = "eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA"
+  
+  // Get all claims
+  val allClaims: Future[ReadOnlyJWTClaimsSet] = AsyncHmacGenerator.getJWTClaims( token )
+  
+  // Get a specific claim
+  val specificClaim: Future[Option[AnyRef]] = AsyncHmacGenerator.getJwtClaim( token, "claimName" )
+```
+## Test code coverage - 100%
+## Build this project
+1. Clone the repo
+2. Execute commands in sbt console: `update, compile`
+3. To run tests execute in sbt console: `test`
+4. To generate code coverage report execute in sbt console: `coverage, test`
