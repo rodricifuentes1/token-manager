@@ -88,9 +88,9 @@ co.rc.tokenmanager {
   // Get a specific claim
   val specificClaim: Future[Option[AnyRef]] = AsyncHmacGenerator.getJwtClaim( token, "claimName" )
 ```
-## Test code coverage - 100%
 ## Build this project
 1. Clone the repo
 2. Execute commands in sbt console: `update, compile`
 3. To run tests execute in sbt console: `test`
 4. To generate code coverage report execute in sbt console: `coverage, test`
+## Test code coverage - 100%
