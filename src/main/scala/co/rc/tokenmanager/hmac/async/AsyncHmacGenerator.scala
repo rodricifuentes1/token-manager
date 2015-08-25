@@ -133,7 +133,7 @@ object AsyncHmacGenerator {
    */
   def validateToken( token: String,
     validateExpirationTime: Boolean = true,
-    validateNotBeforeDate: Boolean = true )( implicit executionContext: ExecutionContext, conf: Config ): Future[ Boolean ] = Future {
+    validateNotBeforeDate: Boolean = false )( implicit executionContext: ExecutionContext, conf: Config ): Future[ Boolean ] = Future {
 
     // Token structure validation
     // Can be failure if token is not well-formed
