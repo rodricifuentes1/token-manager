@@ -25,11 +25,11 @@ object Dependencies {
 
   // Utils
   val ficusVersion: String = "1.1.2"
-  val nScalaTimeVersion: String = "2.0.0"
-  val nimbusVersion: String = "3.9.2"
+  val nScalaTimeVersion: String = "2.2.0"
+  val nimbusVersion: String = "3.10"
   
   // Testing
-  val specs2Version: String = "3.6.2"
+  val specs2Version: String = "3.6.4"
   
 
   // -----------------------------------
