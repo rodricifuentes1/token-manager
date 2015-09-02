@@ -7,7 +7,7 @@ Token manager is a configurable JWT generator library developed in scala on top 
   resolvers += Resolver.bintrayRepo("rodricifuentes1", "RC-releases")
   libraryDependencies += "co.rc" %% "token-manager" % "1.0"
 ```
-* You can also download the compiled `jar file` here --> [ ![Download](https://api.bintray.com/packages/rodricifuentes1/RC-releases/token-manager/images/download.svg) ](https://bintray.com/rodricifuentes1/RC-releases/token-manager/_latestVersion)
+* You can also download the compiled `jar file` here [ ![Download](https://api.bintray.com/packages/rodricifuentes1/RC-releases/token-manager/images/download.svg) ](https://bintray.com/rodricifuentes1/RC-releases/token-manager/_latestVersion)
 
 ### Generate a JWT with HMAC protection
 * Provide basic configuration in your `application.conf` file
