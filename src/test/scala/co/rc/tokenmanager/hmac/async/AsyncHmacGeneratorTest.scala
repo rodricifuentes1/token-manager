@@ -127,11 +127,6 @@ class AsyncHmacGeneratorTest extends Specification {
           |     issuer = "test-issuer"
           |     subject = "test-subject"
           |     audience = ["aud1", "aud2"]
-          |     expirationTime {
-          |       unit = "minutes"
-          |       length = 6
-          |     }
-          |     notBefore = "2015-11-01T12:00:00Z"
           |    }
           |  }
           |}
@@ -154,7 +149,6 @@ class AsyncHmacGeneratorTest extends Specification {
       result.getIssuer must_== "test-issuer"
       result.getSubject must_== "test-subject"
       result.getAudience.toList must_== List( "aud1", "aud2" )
-      new DateTime( result.getNotBeforeTime.getTime ).getMillis must_== new DateTime( "2015-11-01T12:00:00Z" ).getMillis
     }
 
     // ----------------------------------

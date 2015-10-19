@@ -20,8 +20,6 @@ import scala.util.{ Failure, Success, Try }
 
 class AsyncHmacGenerator( conf: Config = ConfigFactory.load() ) {
 
-  import DateTimeReader.reader
-
   /**
    * Method that generates a JWT with HMAC protection
    * @param payload Token json payload
@@ -38,8 +36,8 @@ class AsyncHmacGenerator( conf: Config = ConfigFactory.load() ) {
     issuer: Option[ String ] = conf.as[ Option[ String ] ]( "co.rc.tokenmanager.hmac.data.issuer" ),
     subject: Option[ String ] = conf.as[ Option[ String ] ]( "co.rc.tokenmanager.hmac.data.subject" ),
     audience: Option[ List[ String ] ] = conf.as[ Option[ List[ String ] ] ]( "co.rc.tokenmanager.hmac.data.audience" ),
-    expirationTime: Option[ TimeDuration ] = conf.as[ Option[ TimeDuration ] ]( "co.rc.tokenmanager.hmac.data.expirationTime" ),
-    notBefore: Option[ DateTime ] = conf.as[ Option[ DateTime ] ]( "co.rc.tokenmanager.hmac.data.notBefore" ) )( implicit ec: ExecutionContext ): Future[ String ] = Future {
+    expirationTime: Option[ TimeDuration ] = None,
+    notBefore: Option[ DateTime ] = None )( implicit ec: ExecutionContext ): Future[ String ] = Future {
 
     // Load configuration for HMAC tokens
     val config: HmacConfig = conf.as[ HmacConfig ]( "co.rc.tokenmanager.hmac" )
