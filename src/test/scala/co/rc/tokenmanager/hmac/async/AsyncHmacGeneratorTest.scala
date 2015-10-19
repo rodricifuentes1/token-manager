@@ -23,7 +23,7 @@ import scala.concurrent.ExecutionContext.Implicits
 class AsyncHmacGeneratorTest extends Specification {
   sequential
 
-  "AsyncHmacGenerator specification" should {
+  "AsyncHmacGenerator" should {
 
     // ----------------------------------
     // CONFIG
@@ -35,7 +35,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -50,7 +50,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future exception
       val futureException: Future[ Throwable ] = generator.generateToken(
@@ -71,7 +71,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -86,7 +86,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future exception
       val futureException: Future[ Throwable ] = generator.generateToken(
@@ -101,6 +101,63 @@ class AsyncHmacGeneratorTest extends Specification {
     }
 
     // ----------------------------------
+    // CONFIG DATA
+    // ----------------------------------
+
+    "GENERATE: Generate HMAC token with config data" in {
+
+      // Java-Scala conversions
+      import scala.collection.JavaConversions._
+
+      // Execution context for future management
+      implicit val executionContext: ExecutionContext = Implicits.global
+
+      // Config for this test
+      val config = ConfigFactory.parseString(
+        """
+          |co.rc.tokenmanager {
+          |  hmac {
+          |    algorithm = "HS256"
+          |    secret = "GppEgpOvbqNdrTY5kwxMB3xAphJIXZdZ"
+          |    default-expiration-time {
+          |       unit = "minutes"
+          |       length = 30
+          |    }
+          |    data {
+          |     issuer = "test-issuer"
+          |     subject = "test-subject"
+          |     audience = ["aud1", "aud2"]
+          |     expirationTime {
+          |       unit = "minutes"
+          |       length = 6
+          |     }
+          |     notBefore = "2015-11-01T12:00:00Z"
+          |    }
+          |  }
+          |}
+        """.stripMargin )
+
+      // Generator instance
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
+
+      // Generation and validation future
+      val future: Future[ ReadOnlyJWTClaimsSet ] = for {
+        token <- generator.generateToken( Map( "id" ~> 1, "gender" ~> "Male" ) )
+        claims <- AsyncHmacGenerator.getJWTClaims( token, conf = config )
+      } yield {
+        claims
+      }
+
+      // Boolean result
+      val result: ReadOnlyJWTClaimsSet = Await.result( future, 5.seconds )
+
+      result.getIssuer must_== "test-issuer"
+      result.getSubject must_== "test-subject"
+      result.getAudience.toList must_== List( "aud1", "aud2" )
+      new DateTime( result.getNotBeforeTime.getTime ).getMillis must_== new DateTime( "2015-11-01T12:00:00Z" ).getMillis
+    }
+
+    // ----------------------------------
     // EXPIRATION TIME
     // ----------------------------------
 
@@ -110,7 +167,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -125,7 +182,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -147,7 +204,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -162,7 +219,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -183,7 +240,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -198,7 +255,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -219,7 +276,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -234,7 +291,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -260,7 +317,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -275,7 +332,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future exception
       val futureException: Future[ Throwable ] = generator.generateToken(
@@ -296,7 +353,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -311,7 +368,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -332,7 +389,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -347,7 +404,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -378,7 +435,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -393,7 +450,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future exception
       val futureException: Future[ Throwable ] = generator.generateToken(
@@ -414,7 +471,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -429,7 +486,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -450,7 +507,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -465,7 +522,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -496,7 +553,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -511,7 +568,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future exception
       val futureException: Future[ Throwable ] = generator.generateToken(
@@ -532,7 +589,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -547,7 +604,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -568,7 +625,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -583,7 +640,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Future token
       val generationFuture: Future[ String ] = generator.generateToken(
@@ -614,7 +671,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -629,7 +686,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Validation future
-      val validationException = AsyncHmacGenerator.validateToken( "" ).failed
+      val validationException = AsyncHmacGenerator.validateToken( "", conf = config ).failed
 
       // Validation exception
       val ex: Throwable = Await.result( validationException, 5.seconds )
@@ -645,7 +702,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -660,7 +717,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Validation future
-      val validationException = AsyncHmacGenerator.validateToken( "invalid-token" ).failed
+      val validationException = AsyncHmacGenerator.validateToken( "invalid-token", conf = config ).failed
 
       // Validation exception
       val ex: Throwable = Await.result( validationException, 5.seconds )
@@ -680,7 +737,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -695,7 +752,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Validation future
-      val validationFuture = AsyncHmacGenerator.validateToken( "eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA" )
+      val validationFuture = AsyncHmacGenerator.validateToken( "eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA", conf = config )
 
       // Validation exception
       val result: Boolean = Await.result( validationFuture, 5.seconds )
@@ -710,7 +767,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -725,12 +782,12 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Generation and validation future
       val future: Future[ Boolean ] = for {
         token <- generator.generateToken( Map( "id" ~> 1, "gender" ~> "Male" ) )
-        validation <- AsyncHmacGenerator.validateToken( token, validateExpirationTime = false, validateNotBeforeDate = false )
+        validation <- AsyncHmacGenerator.validateToken( token, validateExpirationTime = false, validateNotBeforeDate = false, conf = config )
       } yield {
         validation
       }
@@ -752,7 +809,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -767,12 +824,12 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Generation and validation future
       val future: Future[ Boolean ] = for {
         token <- generator.generateToken( Map( "id" ~> 1, "gender" ~> "Male" ) )
-        validation <- AsyncHmacGenerator.validateToken( token, validateExpirationTime = true, validateNotBeforeDate = false )
+        validation <- AsyncHmacGenerator.validateToken( token, validateExpirationTime = true, validateNotBeforeDate = false, conf = config )
       } yield {
         validation
       }
@@ -790,7 +847,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -805,12 +862,12 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Generation and validation future
       val future: Future[ Throwable ] = ( for {
         token <- generator.generateToken( Map( "id" ~> 1, "gender" ~> "Male" ) )
-        validation <- AsyncHmacGenerator.validateToken( token, validateExpirationTime = false, validateNotBeforeDate = true )
+        validation <- AsyncHmacGenerator.validateToken( token, validateExpirationTime = false, validateNotBeforeDate = true, conf = config )
       } yield {
         validation
       } ).failed
@@ -828,7 +885,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -843,12 +900,12 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Generation and validation future
       val future: Future[ Boolean ] = for {
         token <- generator.generateToken( Map( "id" ~> 1, "gender" ~> "Male" ), notBefore = Some( new DateTime() ) )
-        validation <- AsyncHmacGenerator.validateToken( token, validateExpirationTime = false, validateNotBeforeDate = true )
+        validation <- AsyncHmacGenerator.validateToken( token, validateExpirationTime = false, validateNotBeforeDate = true, conf = config )
       } yield {
         validation
       }
@@ -869,7 +926,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -884,7 +941,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generation and validation future
-      val future: Future[ Throwable ] = AsyncHmacGenerator.getJWTClaims( "" ).failed
+      val future: Future[ Throwable ] = AsyncHmacGenerator.getJWTClaims( "", conf = config ).failed
 
       // Boolean result
       val ex: Throwable = Await.result( future, 5.seconds )
@@ -899,7 +956,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -914,12 +971,12 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Generation and validation future
       val future: Future[ ReadOnlyJWTClaimsSet ] = for {
         token <- generator.generateToken( Map( "id" ~> 1, "gender" ~> "Male" ) )
-        claims <- AsyncHmacGenerator.getJWTClaims( token )
+        claims <- AsyncHmacGenerator.getJWTClaims( token, conf = config )
       } yield {
         claims
       }
@@ -937,7 +994,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -952,7 +1009,7 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generation and validation future
-      val future: Future[ Throwable ] = AsyncHmacGenerator.getJwtClaim( "", "specific-claim" ).failed
+      val future: Future[ Throwable ] = AsyncHmacGenerator.getJwtClaim( "", "specific-claim", conf = config ).failed
 
       // Boolean result
       val ex: Throwable = Await.result( future, 5.seconds )
@@ -967,7 +1024,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -982,12 +1039,12 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Generation and validation future
       val future: Future[ Option[ AnyRef ] ] = for {
         token <- generator.generateToken( Map( "id" ~> 1, "gender" ~> "Male" ) )
-        claim <- AsyncHmacGenerator.getJwtClaim( token, "claim1" )
+        claim <- AsyncHmacGenerator.getJwtClaim( token, "claim1", conf = config )
       } yield {
         claim
       }
@@ -1005,7 +1062,7 @@ class AsyncHmacGeneratorTest extends Specification {
       implicit val executionContext: ExecutionContext = Implicits.global
 
       // Config for this test
-      implicit val config = ConfigFactory.parseString(
+      val config = ConfigFactory.parseString(
         """
           |co.rc.tokenmanager {
           |  hmac {
@@ -1020,13 +1077,13 @@ class AsyncHmacGeneratorTest extends Specification {
         """.stripMargin )
 
       // Generator instance
-      val generator: AsyncHmacGenerator = new AsyncHmacGenerator()
+      val generator: AsyncHmacGenerator = new AsyncHmacGenerator( config )
 
       // Generation and validation future
       val future: Future[ ( Option[ AnyRef ], Option[ AnyRef ] ) ] = for {
         token <- generator.generateToken( Map( "id" ~> 1, "gender" ~> "Male" ) )
-        claim1 <- AsyncHmacGenerator.getJwtClaim( token, "id" )
-        claim2 <- AsyncHmacGenerator.getJwtClaim( token, "gender" )
+        claim1 <- AsyncHmacGenerator.getJwtClaim( token, "id", conf = config )
+        claim2 <- AsyncHmacGenerator.getJwtClaim( token, "gender", conf = config )
       } yield {
         ( claim1, claim2 )
       }

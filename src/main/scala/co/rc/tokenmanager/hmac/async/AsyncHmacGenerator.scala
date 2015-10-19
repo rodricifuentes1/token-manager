@@ -1,13 +1,14 @@
 package co.rc.tokenmanager.hmac.async
 
 import co.rc.tokenmanager.hmac.base.{ HmacConfig, TimeDuration }
+import co.rc.tokenmanager.hmac.util.DateTimeReader
 import co.rc.tokenmanager.util.TokenException
 
 import com.nimbusds.jwt.{ ReadOnlyJWTClaimsSet, SignedJWT, JWTClaimsSet }
 import com.nimbusds.jose.crypto.{ MACVerifier, MACSigner }
 import com.nimbusds.jose.{ JOSEObjectType, JWSAlgorithm, JWSHeader, JWSSigner }
 
-import com.typesafe.config.Config
+import com.typesafe.config.{ ConfigFactory, Config }
 
 import net.ceedubs.ficus.Ficus._
 
@@ -17,7 +18,9 @@ import scala.concurrent.{ Future, ExecutionContext }
 import scala.collection.JavaConversions._
 import scala.util.{ Failure, Success, Try }
 
-class AsyncHmacGenerator()( implicit executionContext: ExecutionContext, conf: Config ) {
+class AsyncHmacGenerator( conf: Config = ConfigFactory.load() ) {
+
+  import DateTimeReader.reader
 
   /**
    * Method that generates a JWT with HMAC protection
@@ -32,11 +35,11 @@ class AsyncHmacGenerator()( implicit executionContext: ExecutionContext, conf: C
    */
   def generateToken( payload: Map[ String, AnyRef ],
     id: String = java.util.UUID.randomUUID().toString,
-    issuer: Option[ String ] = None,
-    subject: Option[ String ] = None,
-    audience: Option[ List[ String ] ] = None,
-    expirationTime: Option[ TimeDuration ] = None,
-    notBefore: Option[ DateTime ] = None ): Future[ String ] = Future {
+    issuer: Option[ String ] = conf.as[ Option[ String ] ]( "co.rc.tokenmanager.hmac.data.issuer" ),
+    subject: Option[ String ] = conf.as[ Option[ String ] ]( "co.rc.tokenmanager.hmac.data.subject" ),
+    audience: Option[ List[ String ] ] = conf.as[ Option[ List[ String ] ] ]( "co.rc.tokenmanager.hmac.data.audience" ),
+    expirationTime: Option[ TimeDuration ] = conf.as[ Option[ TimeDuration ] ]( "co.rc.tokenmanager.hmac.data.expirationTime" ),
+    notBefore: Option[ DateTime ] = conf.as[ Option[ DateTime ] ]( "co.rc.tokenmanager.hmac.data.notBefore" ) )( implicit ec: ExecutionContext ): Future[ String ] = Future {
 
     // Load configuration for HMAC tokens
     val config: HmacConfig = conf.as[ HmacConfig ]( "co.rc.tokenmanager.hmac" )
@@ -49,9 +52,9 @@ class AsyncHmacGenerator()( implicit executionContext: ExecutionContext, conf: C
 
     // Set token claims
     // More info http://self-issued.info/docs/draft-ietf-oauth-json-web-token.html#rfc.section.4
-    issuer.map( iss => claimsSet.setIssuer( iss ) )
-    subject.map( sb => claimsSet.setSubject( sb ) )
-    audience.map( aud => claimsSet.setAudience( aud ) )
+    issuer.map { iss => claimsSet.setIssuer( iss ); iss; }
+    subject.map { sb => claimsSet.setSubject( sb ); sb; }
+    audience.map { aud => claimsSet.setAudience( aud ); aud; }
     expirationTime match {
       case Some( et ) =>
         if ( notBefore.isDefined ) claimsSet.setExpirationTime( getExpirationDate( notBefore.get, et ).toDate )
@@ -60,7 +63,7 @@ class AsyncHmacGenerator()( implicit executionContext: ExecutionContext, conf: C
         if ( notBefore.isDefined ) claimsSet.setExpirationTime( getExpirationDate( notBefore.get, config.defaultExpTime ).toDate )
         else claimsSet.setExpirationTime( getExpirationDate( now, config.defaultExpTime ).toDate )
     }
-    notBefore.map( nb => claimsSet.setNotBeforeTime( nb.toDate ) )
+    notBefore.map { nb => claimsSet.setNotBeforeTime( nb.toDate ); nb; }
 
     // Obligatory claims
     claimsSet.setIssueTime( now.toDate )
@@ -127,19 +130,20 @@ object AsyncHmacGenerator {
    * @param token Token to validate
    * @param validateExpirationTime Boolean that indicates if it must validate token expiration time. Default is true.
    * @param validateNotBeforeDate Boolean that indicates if it must validate token not before date. Default is true.
-   * @param executionContext implicit execution context for future management
-   * @param conf Implicit app configuration
+   * @param conf App configuration
+   * @param ec Implicit execution context for future management
    * @return A future with a Boolean inside.
    */
   def validateToken( token: String,
     validateExpirationTime: Boolean = true,
-    validateNotBeforeDate: Boolean = false )( implicit executionContext: ExecutionContext, conf: Config ): Future[ Boolean ] = Future {
+    validateNotBeforeDate: Boolean = false,
+    conf: Config = ConfigFactory.load() )( implicit ec: ExecutionContext ): Future[ Boolean ] = Future {
 
     // Token structure validation
     // Can be failure if token is not well-formed
     val structureCheck: Try[ ( SignedJWT, Boolean ) ] = for {
       signedJwt <- parseToken( token )
-      verifier <- getVerifier()
+      verifier <- getVerifier( conf )
       valid <- verify( signedJwt, verifier )
     } yield ( signedJwt, valid )
 
@@ -164,12 +168,13 @@ object AsyncHmacGenerator {
   /**
    * Method that retrieves token claims set object
    * @param token Token to parse
-   * @param executionContext implicit execution context for future management
-   * @param conf Implicit app configuration
+   * @param conf App configuration
+   * @param ec Implicit execution context for future management
    * @return A Future with token claims if token is well formed
    *         An exception otherwise
    */
-  def getJWTClaims( token: String )( implicit executionContext: ExecutionContext, conf: Config ): Future[ ReadOnlyJWTClaimsSet ] = Future {
+  def getJWTClaims( token: String,
+    conf: Config = ConfigFactory.load() )( implicit ec: ExecutionContext ): Future[ ReadOnlyJWTClaimsSet ] = Future {
 
     // Get claims set
     val claimsSet: Try[ ReadOnlyJWTClaimsSet ] = for {
@@ -187,20 +192,21 @@ object AsyncHmacGenerator {
    * Method that retrieves a specific claim from token claims
    * @param token Token to parse
    * @param claimName Claim name to retrieve
-   * @param executionContext implicit execution context for future management
-   * @param conf Implicit app configuration
+   * @param conf App configuration
+   * @param ec implicit execution context for future management
    * @return A Future with an Option of required claim as an AnyRef instance
    *         Throws exception if token is not valid
    */
   def getJwtClaim( token: String,
-    claimName: String )( implicit executionContext: ExecutionContext, conf: Config ): Future[ Option[ AnyRef ] ] = Future {
+    claimName: String,
+    conf: Config = ConfigFactory.load() )( implicit ec: ExecutionContext ): Future[ Option[ AnyRef ] ] = Future {
 
     // Get claims set
     val claimsSet: Try[ Option[ AnyRef ] ] = for {
       signedJwt <- parseToken( token )
     } yield {
       val claim: AnyRef = signedJwt.getJWTClaimsSet.getClaim( claimName )
-      if ( claim != null ) Some( claim ) else None
+      Option( claim )
     }
 
     claimsSet match {
@@ -219,17 +225,17 @@ object AsyncHmacGenerator {
    * @return A Try with a SignetJWT instance inside
    *         Throws ParseException if token is invalid
    */
-  private def parseToken( token: String ) = Try {
+  private def parseToken( token: String ): Try[ SignedJWT ] = Try {
     SignedJWT.parse( token )
   }
 
   /**
    * Method that creates a new HMACVerifier
-   * @param conf Implicit configuration loaded
+   * @param conf Configuration loaded
    * @return A Try with MACVerifier instance inside
    *         Throws IllegalArgumentException if configuration is invalid
    */
-  private def getVerifier()( implicit conf: Config ): Try[ MACVerifier ] = Try {
+  private def getVerifier( conf: Config ): Try[ MACVerifier ] = Try {
     val config: HmacConfig = conf.as[ HmacConfig ]( "co.rc.tokenmanager.hmac" )
     new MACVerifier( config.secret )
   }
