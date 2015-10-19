@@ -129,3 +129,9 @@ co.rc.tokenmanager {
 4. To generate code coverage report execute in sbt console: `coverage, test`
 
 ## Test code coverage - 100%
+## Changelog
+v1.1 (current)
+* Removed implicit config parameter for AsyncHmacGenerator class constructor
+* Removed implicit config parameter for AsyncHmacGenerator object methods
+* Added generation static options via typesafe config
+v1.0 - First release
