@@ -134,4 +134,5 @@ v1.1 (current)
 * Removed implicit config parameter for AsyncHmacGenerator class constructor
 * Removed implicit config parameter for AsyncHmacGenerator object methods
 * Added generation static options via typesafe config
-v1.0 - First release
+
+[v1.0](https://github.com/rodricifuentes1/token-manager/tree/v1.0) - First release
