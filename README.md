@@ -1,5 +1,5 @@
 ## Token manager
-Token manager is a configurable JWT generator library developed in scala on top of [Nimbus JWT library](http://connect2id.com/products/nimbus-jose-jwt). It encapsulates all functionality needed to generate Json web tokens making it easy to re-use it in any project
+Token manager is a configurable JWT generator library developed in scala on top of [Nimbus JWT library](http://connect2id.com/products/nimbus-jose-jwt). It encapsulates all functionality needed to generate Json web tokens making it easy to re-use them in any project
 ## Usage
 ### Adding the dependency
 * Modify your `build.sbt` file
